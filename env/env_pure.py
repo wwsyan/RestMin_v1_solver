@@ -39,7 +39,7 @@ import numpy as np
 from gym import spaces
 
 from copy import deepcopy
-from utils import grid_trans, get_cluster_num
+from utils import grid_trans
 
 
 class RestMinEnv_v1(gym.Env):
@@ -75,7 +75,6 @@ class RestMinEnv_v1(gym.Env):
                  size=6, 
                  mode=1, 
                  render_mode=None, 
-                 use_cluster_reward=False
         ):
         super().__init__()
         assert mode in [0, 1], "Env: input mode in [0, 1]"
@@ -83,7 +82,6 @@ class RestMinEnv_v1(gym.Env):
         
         self.SIZE = size
         self.mode = mode
-        self.use_cluster_reward = use_cluster_reward
         
         if mode == 0:    
             self.observation_space = spaces.MultiBinary(size**2)
@@ -252,12 +250,6 @@ class RestMinEnv_v1(gym.Env):
         done = self._is_done()
         
         reward = self._get_reward() if done else 0
-        if self.use_cluster_reward:
-            cluster_num = get_cluster_num(self.state)
-            if cluster_num == 2:
-                reward += 1
-            else:
-                reward += 0.1 * (5 - cluster_num)
         
         info = self._get_info()
         
@@ -322,119 +314,10 @@ class RestMinEnv_v1(gym.Env):
                 pygame.display.quit()
                 pygame.quit()
     
-    #################################################################################
-    # Methods for MCTS
-    def step_in_mcts(self, state, action):
-        assert action in state["legal_actions"], "MCTS: step() input an illegal action."
-        
-        x, y, direction = self.std_action_to_raw(action)
-        new_state = deepcopy(state)
-        Gid = new_state["obs"][x, y]
-        new_state["obs"][x, y] = 0
-        
-        if direction == self.UP:
-            if new_state["obs"][x-1, y] == Gid:
-                new_state["obs"][x-1, y] = 0
-                new_state["obs"][x-2, y] = Gid
-            else:
-                new_state["obs"][x-2, y] = Gid
-                
-        elif direction == self.DOWN:
-            if new_state["obs"][x+1, y] == Gid:
-                new_state["obs"][x+1, y] = 0
-                new_state["obs"][x+2, y] = Gid
-            else:
-                new_state["obs"][x+2, y] = Gid
-                
-        elif direction == self.LEFT:
-            if new_state["obs"][x, y-1] == Gid:
-                new_state["obs"][x, y-1] = 0
-                new_state["obs"][x, y-2] = Gid
-            else:
-                new_state["obs"][x, y-2] = Gid
-                
-        elif direction == self.RIGHT:
-            if new_state["obs"][x, y+1] == Gid:
-                new_state["obs"][x, y+1] = 0
-                new_state["obs"][x, y+2] = Gid
-            else:
-                new_state["obs"][x, y+2] = Gid
-        
-        new_state["legal_actions"] = self.get_legal_action_in_mcts(new_state)
-        new_state["n_step"] += 1
-                
-        return new_state
-    
-    def get_legal_action_in_mcts(self, state):
-        legal_actions = []
-        for i in range(self.SIZE):
-            for j in range(self.SIZE):
-                if state['obs'][i, j] == 0: 
-                    continue 
-                if 0 <= i-2 < self.SIZE:
-                    if state['obs'][i-1, j] != 0 and state['obs'][i-2, j] == 0: # Jump UP
-                        # (x*self.COL + y)*4 + direc_value
-                        legal_actions.append((i*self.SIZE+j)*4 + self.UP)           
-                if 0 <= i+2 < self.SIZE:
-                    if state['obs'][i+1, j] != 0 and state['obs'][i+2, j] == 0: # Jump DOWN
-                        legal_actions.append((i*self.SIZE+j)*4 + self.DOWN)
-                if 0 <= j-2 < self.SIZE:
-                    if state['obs'][i, j-1] != 0 and state['obs'][i, j-2] == 0: # Jump LEFT
-                        legal_actions.append((i*self.SIZE+j)*4 + self.LEFT)
-                if 0 <= j+2 < self.SIZE:
-                    if state['obs'][i, j+1] != 0 and state['obs'][i, j+2] == 0: # Jump RIGHT
-                        legal_actions.append((i*self.SIZE+j)*4 + self.RIGHT)
-        
-        return legal_actions
-    
-    def get_reward_in_mcts(self, state):
-        count = 0
-        for i in range(self.SIZE):
-            for j in range(self.SIZE):
-                if state["obs"][i, j] > 0: 
-                    count += 1
-                    
-        if self.mode == 0:
-            if count == 1:
-                reward = 100
-            else:
-                reward = 4 - count
-        elif self.mode == 1:
-            if count == 2:
-                reward = 100
-            else:
-                reward = 15 - count
-                
-        return reward 
-    
-    def get_action_mask_in_mcts(self, state):
-        action_mask = np.zeros(self.action_space.n)
-        action_mask[state["legal_actions"]] = 1
-        
-        return action_mask.astype(bool)
-    
-    def get_obs_in_mcts(self, state):
-        if self.mode == 0:
-            obs = state["obs"].flatten()
-        elif self.mode == 1:
-            channel_0 = np.zeros((self.SIZE, self.SIZE))
-            channel_1 = np.zeros((self.SIZE, self.SIZE)) 
-            
-            for i in range(self.SIZE):
-                for j in range(self.SIZE):
-                    if state["obs"][i, j] == 1:
-                        channel_0[i, j] = 1
-                    elif state["obs"][i, j] == 2:
-                        channel_1[i, j] = 1
-            
-            obs = np.concatenate((channel_0.flatten(), channel_1.flatten()))
-        
-        return obs
-    
 
 # 测试环境
 if __name__ == "__main__":
-    env = RestMinEnv_v1(size=6, mode=1, render_mode="human", use_cluster_reward=False)
+    env = RestMinEnv_v1(size=6, mode=1, render_mode="human")
     obs = env.reset()
     rewards = []
     while True:
