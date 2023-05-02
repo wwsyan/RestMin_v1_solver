@@ -13,7 +13,7 @@
 | <img src="img/gameplay_mode0.gif" width="75%" height="75%"> | <img src="img/gameplay_mode1.gif" width="75%" height="75%"> |
 
 ### 终局条件
-该棋的游玩版本和训练版本有着不同的终局条件。在[游玩版本](https://github.com/wwsyan/RestMin_v1_solver/blob/main/env/gameRaw.js#L296)中，
+该棋的游玩环境和训练环境有着不同的终局条件。在[游玩环境](https://github.com/wwsyan/RestMin_v1_solver/blob/main/env/gameRaw.js#L296)中，
 终局判断函数会按顺序进行以下的判定：
 <ol>
 <li>若不存在合法动作，则死局（<b>第一死局充分条件</b>）；</li>
@@ -36,7 +36,7 @@
 <li>可以仅使用一个足够深的递归判定来满足需要，但会带来较严重的卡顿，影响体验；</li>
 </ol>
 
-由于上述组合判定有着一定的计算负担，会较大地影响训练速度。因此，在[训练版本](https://github.com/wwsyan/RestMin_v1_solver/blob/main/env/env_pure.py#L181)中，
+由于上述组合判定有着一定的计算负担，会较大地影响训练速度。因此，在[训练环境](https://github.com/wwsyan/RestMin_v1_solver/blob/main/env/env_pure.py#L181)中，
 终局条件简化为：
 <ol>
 <li>若不存在合法动作，则死局（<b>第一死局充分条件</b>）；</li>
