@@ -44,7 +44,7 @@ Try to solve enviroment RestMin_v1, in the framework of Stable-baselines3
 </ol>
 
 ### 奖励
-在标准版本中，奖励只有在终局时获得，其余状态下都是0。如果最终达到了最优解，即最少的棋子数，那么将获得巨额的奖励
+在标准版本中，奖励只有在终局时获得，其余状态下都是0。如果最终达到了最优解，即最少的棋子数，那么将获得有区分度的巨额奖励
 （[Detail](https://github.com/wwsyan/RestMin_v1_solver/blob/main/env/env_pure.py#L184)）。
 
 ### 观测空间与动作空间
