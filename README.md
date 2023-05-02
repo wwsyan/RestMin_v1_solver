@@ -1,5 +1,5 @@
 # RestMin_v1_solver
-Try to solve enviroment RestMin_v1, in the framework of Stable-baselines3
+本工程使用 强化学习框架 [Stable-Baselines3](https://stable-baselines3.readthedocs.io/en/master/guide/install.html)。
 
 ## 环境介绍
 该环境是一种中国古代棋的简化/魔改版本，分为两种模式。玩家经过一系列动作，减少棋盘中的棋子，终局时棋子剩得越少，得分越高。
@@ -48,7 +48,11 @@ Try to solve enviroment RestMin_v1, in the framework of Stable-baselines3
 （[Detail](https://github.com/wwsyan/RestMin_v1_solver/blob/main/env/env_pure.py#L184)）。
 
 ### 观测空间与动作空间
+对于 $6×6$ 的棋盘， 模式 0 和 模式 1 的 $observation$ 分别是 <code>MultiBinary(36)</code> 和 <code>MultiBinary(72)</code>；
+$action$ 是 <code>Discrete(36*4)</code>，意为选中一个位置的棋子，并进行上下左右四个方向的移动，由于有大量不合法动作，所以训练时要使用动作掩码
+（[Detail](https://github.com/wwsyan/RestMin_v1_solver/blob/main/env/env_pure.py#L153)）。
 
+## 模式0：经典PPO
 
 
 
