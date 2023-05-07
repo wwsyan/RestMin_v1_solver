@@ -2,7 +2,8 @@
 本工程使用 强化学习框架 [Stable-Baselines3](https://stable-baselines3.readthedocs.io/en/master/guide/install.html)。
 
 ## 环境介绍
-该环境是一种中国古代棋的简化/魔改版本，分为两种模式。玩家经过一系列动作，减少棋盘中的棋子，终局时棋子剩得越少，得分越高。
+该环境是一种中国古代棋的简化/魔改版本，分为两种模式，模式0简化，模式1魔改。
+玩家经过一系列动作，减少棋盘中的棋子，终局时棋子剩得越少，得分越高。
 <ul>
 <li>模式0下，棋子皆为单色。棋子可以以相邻棋子作为跳板进行移动，移动后，跳板棋子移除。</li>
 <li>模式1下，有双色棋子，棋子的移动规则同模式0，但只有跳板棋子与跳跃棋子同色时，才会被移除，反之会被保留。由于合法动作大量增加，探索难度显著提升。</li>
@@ -76,7 +77,7 @@ $action$ 是 <code>Discrete(36*4)</code>，意为选中一个位置的棋子，�
 
 或者可以看看另一个 $action$ 更简单的走迷宫的例子：[Code](https://github.com/wwsyan/SB3_practice#maze-by-maskable-ppo-with-data-augment)。
 
-经过试验，数据增强（DA）对对训练速度和训练效果都提升较大：
+经过实验，数据增强（DA）对对训练速度和训练效果都提升较大：
 | $4×4$ | $5×5$ | $6×6$ |
 |:---:|:---:|:---:|
 |<img src="ppo_da/img/compare_size4.png">|<img src="ppo_da/img/compare_size5.png">|<img src="ppo_da/img/compare_size6.png">|
@@ -109,6 +110,8 @@ MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，explor
   <li>MCTS让数据变得更高质量的同时，也意味着更新前后策略差异会比较大，这时候“早停”机制反而限制了网络的更新。可以视情况将<code>target_kl</code>调高，或直接设置为<code>None</code>。</li>
 </ul>
 
+作为一个计算负担超级重的策略优化的插件，我们最好是在合适的时候再去启用，而不是像AlphaZero那样从零开始。比如我们可以先用PPO跑一个底模，在此基础上启用MCTS。
+如下实验展示的就是这样的过程：
 
 
 
