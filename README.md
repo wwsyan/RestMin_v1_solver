@@ -45,14 +45,44 @@
 
 ### 奖励
 在标准版本中，奖励只有在终局时获得，其余状态下都是0。如果最终达到了最优解，即最少的棋子数，那么将获得有区分度的大奖励
-（[Detail](https://github.com/wwsyan/RestMin_v1_solver/blob/main/env/env_pure.py#L184)）。
+（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/env/env_pure.py#L184)）。
 
 ### 观测空间与动作空间
 对于 $6×6$ 的棋盘， 模式 0 和 模式 1 的 $observation$ 分别是 <code>MultiBinary(36)</code> 和 <code>MultiBinary(72)</code>；
 $action$ 是 <code>Discrete(36*4)</code>，意为选中一个位置的棋子，并进行上下左右四个方向的移动，由于有大量不合法动作，所以训练时要使用动作掩码
-（[Detail](https://github.com/wwsyan/RestMin_v1_solver/blob/main/env/env_pure.py#L153)）。
+（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/env/env_pure.py#L153)）。
 
-## 模式0：经典PPO
+## 模式0：标准PPO
+使用标准PPO作为基线，分别测试在 $4×4$， $5×5$ 和 $6×6$ 棋盘下的性能
+（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_baseline/run.py)）。
+| 幕长 | 幕奖励 | 说明 |
+|:---:|:---:|:---:|
+|<img src="ppo_baseline/img/baseline_ep_len.png" width="100%" height="100%">|<img src="ppo_baseline/img/baseline_reward.png" width="100%" height="100%">| 橙： $4×4$ ，蓝： $5×5$ ，红： $6×6$ |
+
+在小棋盘下，PPO较好地实现了所有初始位置下的最优解轨迹。但随着棋盘的扩大，比例下降。
+
+## 模式0：PPO+数据增强
+首先值得考虑的是数据的等效性，让所有等价的幕轨迹一同参与模型的训练，应当是十分有效的。
+等价的状态由旋转和镜像组合，一共8种。
+我们需要在收集到一个batch数据后，对这组数据进行加工，再把加工好的数据传输给训练模块。
+具体来说（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_da/callback_da.py#L7)），
+我们要使用<code>Stable-Baselines3</code>中的自定义<code>Callback</code>函数来参与训练流程，操作<code>rollout_buffer</code>中的下列数据：
+<ul>
+  <li>扩展 <code>observations</code>, <code>actions</code> 和 <code>action_masks</code>.</li>
+  <li>扩展/共享 <code>episode_starts</code> and <code>rewards</code>.</li>
+  <li>重新计算 <code>values</code> and <code>log_probs</code>.</li>
+  <li>重新计算 <code>returns</code> and <code>advantages</code>.</li>
+</ul>
+
+或者可以看看另一个更浅显的走迷宫的例子：[Code](https://github.com/wwsyan/SB3_practice#maze-by-maskable-ppo-with-data-augment)。
+
+经过试验，数据增强带来了对训练速度和训练效果都带来了极大的提升：
+| 幕长 | 幕奖励 | 说明 |
+|:---:|:---:|:---:|
+|<img src="ppo_da/img/ep_len.png" width="100%" height="100%">|<img src="ppo_da/img/ep_rew.png" width="100%" height="100%">| 青： $4×4$ ，粉： $5×5$ ，绿： $6×6$ |
+
+
+
 
 
 
