@@ -98,8 +98,15 @@ MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，explor
 跟随这个思路，我们可以将MCTS应用于PPO算法中收集训练数据的模块中，替代直接从actor网络的输出中采样，以获得质量更高的幕轨迹。
 具体来说，我们需要
 <ul>
-  <li>改写标准Gym环境，需要一个能够输入状态和动作，输出后继状态的接口函数</li>
-  <li></li>
+  <li>改写标准Gym环境，需要一个能够输入状态和动作，输出后继状态的接口函数（[Code]）；</li>
+  <li>编/改写MCTS算法，调用上述的接口函数实现蒙特卡洛树的expand（[Code]）；</li>
+  <li>改写<code>Stable-Baselines3</code>的PPO算法文件，在<code>collect_rollouts</code>函数中调用MCTS（[Code]）。</li>
+</ul>
+
+另外，需要注意：
+<ul>
+  <li>MCTS的引入使得数据收集变得非常慢，所以每一个batch的数据都十分珍贵，一定要让算法有一定的断点传续能力。<code>Stable-Baselines3</code>中的PPO不具备该功能，需要改写；</li>
+  <li>MCTS让数据变得更高质量的同时，也意味着更新前后策略差异会比较大，这时候“早停”机制反而限制了网络的更新。可以视情况将<code>target_kl</code>调高，或直接设置为<code>None</code>。</li>
 </ul>
 
 
