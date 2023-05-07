@@ -10,11 +10,11 @@ def mask_fn(env):
     return env.get_action_mask()
 
 if __name__ == "__main__":
-    env = RestMinEnv_v1(size=6, mode=1, use_cluster_reward=True)
+    env = RestMinEnv_v1(size=6, mode=0)
     env = ActionMasker(env, mask_fn)
     
     policy_kwargs = dict(activation_fn=th.nn.Tanh,
-                          net_arch=dict(pi=[64, 64, 128], vf=[64, 64, 32]))
+                          net_arch=dict(pi=[64, 128], vf=[64, 64, 32]))
     
     try:
         model = MaskablePPO.load(path="ppo", env=env)
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     
     DACallback = DataAugmentCallback(env=env, model=model, use_DA=True)
     
-    model.learn(50e4, callback=DACallback)
+    model.learn(100e4, callback=DACallback)
     model.save("ppo")
     del model
     
