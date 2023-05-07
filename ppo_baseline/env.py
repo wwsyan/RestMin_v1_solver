@@ -39,7 +39,7 @@ import numpy as np
 from gym import spaces
 
 from copy import deepcopy
-from utils import grid_trans, get_cluster_num
+from utils import grid_trans
 
 
 class RestMinEnv_v1(gym.Env):
@@ -75,7 +75,6 @@ class RestMinEnv_v1(gym.Env):
                  size=6, 
                  mode=1, 
                  render_mode=None, 
-                 use_cluster_reward=False
         ):
         super().__init__()
         assert mode in [0, 1], "Env: input mode in [0, 1]"
@@ -251,12 +250,6 @@ class RestMinEnv_v1(gym.Env):
         done = self._is_done()
         
         reward = self._get_reward() if done else 0
-        if self.use_cluster_reward:
-            cluster_num = get_cluster_num(self.state)
-            if cluster_num == 2:
-                reward += 1
-            else:
-                reward += 0.1 * (5 - cluster_num)
         
         info = self._get_info()
         
