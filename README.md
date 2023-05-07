@@ -107,8 +107,8 @@ MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，explor
     [Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/ppo_mcts.py#L334)）。</li>
 
 另外，需要注意：
-- MCTS的引入使得数据收集变得非常慢，所以每一个batch的数据都十分珍贵，一定要让算法有一定的断点传续能力。
-    <code>Stable-Baselines3</code>中的PPO不具备该功能，需要改写；
+- MCTS的引入使得数据的收集变得非常慢，所以每一个batch的数据都十分宝贵，算法要有一定的断点传续功能。
+    注意<code>Stable-Baselines3</code>中的PPO不具备该功能，需要改写；
 - MCTS让数据变得更高质量的同时，也意味着更新前后策略差异会比较大，这时候“早停”机制反而限制了网络的更新。可以视情况将<code>target_kl</code>调高，或直接设置为<code>None</code>。
 - 在一幕数据的收集中，保留蒙特卡洛树的新枝，只去掉旧枝，可能会提高训练效果（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/mcts.py#L215)）。
     
