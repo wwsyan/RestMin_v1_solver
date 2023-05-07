@@ -97,7 +97,7 @@ $action$ 是 <code>Discrete(36*4)</code>，意为选中一个位置的棋子，�
 MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，exploration和exploitation的方法，广泛应用于环境信息完全的场景。
 在一些论文中，被认为是一种“策略优化算子”。
 跟随这个思路，我们可以将MCTS应用于PPO算法中收集训练数据的模块中，替代直接从actor网络的输出中采样，以获得质量更高的幕轨迹。
-具体来说，我们需要
+具体来说，我们要：
 
 - 改写标准Gym环境，需要一个能够输入状态和动作，输出后继状态的接口函数（
     [Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/env.py#L326)）；</li>
@@ -106,7 +106,7 @@ MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，explor
 - 改写<code>Stable-Baselines3</code>的PPO算法文件，在<code>collect_rollouts</code>函数中调用MCTS（
     [Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/ppo_mcts.py#L334)）。</li>
 
-另外，需要注意：
+另外，注意：
 - MCTS的引入使得数据的收集变得非常慢，所以每一个batch的数据都十分宝贵，算法要有一定的断点传续功能。
     注意<code>Stable-Baselines3</code>中的PPO不具备该功能，需要改写；
 - MCTS让数据变得更高质量的同时，也意味着更新前后策略差异会比较大，这时候“早停”机制反而限制了网络的更新。可以视情况将<code>target_kl</code>调高，或直接设置为<code>None</code>。
