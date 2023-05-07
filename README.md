@@ -2,7 +2,7 @@
 本工程使用 强化学习框架 [Stable-Baselines3](https://stable-baselines3.readthedocs.io/en/master/guide/install.html)。
 
 ## 环境介绍
-该环境是一种中国古代棋的简化/魔改版本，分为两种模式，模式0简化，模式1魔改。
+该环境是一种中国古代棋的简化/魔改版本，分为两种模式，模式0是简化，模式1是魔改。
 玩家经过一系列动作，减少棋盘中的棋子，终局时棋子剩得越少，得分越高。
 <ul>
 <li>模式0下，棋子皆为单色。棋子可以以相邻棋子作为跳板进行移动，移动后，跳板棋子移除。</li>
@@ -98,18 +98,20 @@ MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，explor
 在一些论文中，被认为是一种“策略优化算子”。
 跟随这个思路，我们可以将MCTS应用于PPO算法中收集训练数据的模块中，替代直接从actor网络的输出中采样，以获得质量更高的幕轨迹。
 具体来说，我们需要
-<ul>
-  <li>改写标准Gym环境，需要一个能够输入状态和动作，输出后继状态的接口函数（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/env.py#L326)）；</li>
-  <li>编/改写MCTS算法，调用上述的接口函数，和PPO的ActorCritic网络实现蒙特卡洛树的expand（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/mcts.py#L116)）；</li>
-  <li>改写<code>Stable-Baselines3</code>的PPO算法文件，在<code>collect_rollouts</code>函数中调用MCTS（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/ppo_mcts.py#L334)）。</li>
-</ul>
+
+- 改写标准Gym环境，需要一个能够输入状态和动作，输出后继状态的接口函数（
+    [Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/env.py#L326)）；</li>
+- 编/改写MCTS算法，调用上述的接口函数，和PPO的ActorCritic网络实现蒙特卡洛树的expand（
+    [Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/mcts.py#L116)）；</li>
+- 改写<code>Stable-Baselines3</code>的PPO算法文件，在<code>collect_rollouts</code>函数中调用MCTS（
+    [Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/ppo_mcts.py#L334)）。</li>
 
 另外，需要注意：
-<ul>
-  <li>MCTS的引入使得数据收集变得非常慢，所以每一个batch的数据都十分珍贵，一定要让算法有一定的断点传续能力。<code>Stable-Baselines3</code>中的PPO不具备该功能，需要改写；</li>
-  <li>MCTS让数据变得更高质量的同时，也意味着更新前后策略差异会比较大，这时候“早停”机制反而限制了网络的更新。可以视情况将<code>target_kl</code>调高，或直接设置为<code>None</code>。</li>
-  <li>在一幕数据的收集中，保留蒙特卡洛树的新枝，只去掉旧枝，可能会提高训练效果（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/mcts.py#L215)）。</li>
-</ul>
+- MCTS的引入使得数据收集变得非常慢，所以每一个batch的数据都十分珍贵，一定要让算法有一定的断点传续能力。
+    <code>Stable-Baselines3</code>中的PPO不具备该功能，需要改写；
+- MCTS让数据变得更高质量的同时，也意味着更新前后策略差异会比较大，这时候“早停”机制反而限制了网络的更新。可以视情况将<code>target_kl</code>调高，或直接设置为<code>None</code>。
+- 在一幕数据的收集中，保留蒙特卡洛树的新枝，只去掉旧枝，可能会提高训练效果（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/mcts.py#L215)）。
+    
 
 作为一个计算负担很重的策略优化的插件，我们最好是在合适的时候再去启用，而不是像AlphaZero那样从零开始。比如我们可以先用PPO跑一个底模，在此基础上启用MCTS。
 如下实验展示的就是这样的过程：
