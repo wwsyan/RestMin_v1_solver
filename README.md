@@ -44,7 +44,7 @@
 </ol>
 
 ### 奖励
-在标准版本中，奖励只有在终局时获得，其余状态下都是0。如果最终达到了最优解，即最少的棋子数，那么将获得有区分度的大奖励
+在标准版本中，奖励只有在终局时获得，其余状态下都是0。如果最终达到了最优解，即剩余最少的棋子数，那么将获得有区分度的大奖励
 （[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/env/env_pure.py#L184)）。
 
 ### 观测空间与动作空间
@@ -57,12 +57,12 @@ $action$ 是 <code>Discrete(36*4)</code>，意为选中一个位置的棋子，�
 （[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_baseline/run.py)）。
 | 幕长 | 幕奖励 | 说明 |
 |:---:|:---:|:---:|
-|<img src="ppo_baseline/img/baseline_ep_len.png" width="100%" height="100%">|<img src="ppo_baseline/img/baseline_reward.png" width="100%" height="100%">| 橙： $4×4$ ，蓝： $5×5$ ，红： $6×6$ |
+|<img src="ppo_baseline/img/baseline_ep_len.png" width="100%" height="100%">|<img src="ppo_baseline/img/baseline_reward.png" width="100%" height="100%">| 橙： $4×4$ <br>蓝： $5×5$ <br>红： $6×6$ |
 
 在小棋盘下，PPO较好地实现了所有初始位置下的最优解轨迹。但随着棋盘的扩大，比例下降。
 
 ## 模式0：PPO+数据增强
-首先值得考虑的是数据的等效性，让所有等价的幕轨迹一同参与模型的训练，应当是十分有效的。
+首先值得考虑的trick是数据的等效性，让所有等价的幕轨迹一同参与模型的训练，应当是十分有效的。
 等价的状态由旋转和镜像组合，一共8种。
 我们需要在收集到一个batch数据后，对这组数据进行加工，再把加工好的数据传输给训练模块。
 具体来说（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_da/callback_da.py#L7)），
@@ -74,13 +74,33 @@ $action$ 是 <code>Discrete(36*4)</code>，意为选中一个位置的棋子，�
   <li>重新计算 <code>returns</code> and <code>advantages</code>.</li>
 </ul>
 
-或者可以看看另一个更浅显的走迷宫的例子：[Code](https://github.com/wwsyan/SB3_practice#maze-by-maskable-ppo-with-data-augment)。
+或者可以看看另一个 $action$ 更简单的走迷宫的例子：[Code](https://github.com/wwsyan/SB3_practice#maze-by-maskable-ppo-with-data-augment)。
 
-经过试验，数据增强带来了对训练速度和训练效果都带来了极大的提升：
-| 幕长 | 幕奖励 | 说明 |
+经过试验，数据增强（DA）对对训练速度和训练效果都提升较大：
+| $4×4$ | $5×5$ | $6×6$ |
 |:---:|:---:|:---:|
-|<img src="ppo_da/img/ep_len.png" width="100%" height="100%">|<img src="ppo_da/img/ep_rew.png" width="100%" height="100%">| 青： $4×4$ ，粉： $5×5$ ，绿： $6×6$ |
+|<img src="ppo_da/img/compare_size4.png">|<img src="ppo_da/img/compare_size5.png">|<img src="ppo_da/img/compare_size6.png">|
 
+值得注意的是，使用DA扩充数据，会增大对网络学习能力的要求。如下图所示，在保持原有网络的基础上使用DA（灰线），分数在上升后突然跌落，表现出欠拟合的现象，最终分数甚至较不使用DA的情况更低了：
+|图示|Actor和Critic网络隐层|
+|:---:|:---:|
+|<img src="ppo_da/img/underfit.png">|红（未使用DA）：[64,64] 和 [64,64]<br>绿（DA）：[64,128] 和 [64,64,32]<br>灰（DA）：[64,64] 和 [64,64]|
+
+### 欠拟合与过拟合的判断
+<ul>
+  <li>欠拟合：即网络学习能力不足，对好的轨迹学习不够，表现为持续的低奖励，或探索到高奖励后无法保持；</li>
+  <li>过拟合：即网络学习能力过强，学到不具有泛用性的特性。由于过度拟合，导致训练每一批数据都会较大程度地更新参数，表现为频繁触发<code>target_kl</code>的训练“早停”机制。</li>
+</ul>
+
+## 模式0：PPO+MCTS
+MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，exploration和exploitation的方法，广泛应用于环境信息完全的场景。
+在一些论文中，被认为是一种“策略优化算子”。
+跟随这个思路，我们可以将MCTS应用于PPO算法中收集训练数据的模块中，替代直接从actor网络的输出中采样，以获得质量更高的幕轨迹。
+具体来说，我们需要
+<ul>
+  <li>改写标准Gym环境，需要一个能够输入状态和动作，输出后继状态的接口函数</li>
+  <li></li>
+</ul>
 
 
 
