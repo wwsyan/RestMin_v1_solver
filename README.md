@@ -77,7 +77,7 @@ $action$ 是 <code>Discrete(36*4)</code>，意为选中一个位置的棋子，�
 
 或者可以看看另一个 $action$ 更简单的走迷宫的例子：[Code](https://github.com/wwsyan/SB3_practice#maze-by-maskable-ppo-with-data-augment)。
 
-经过实验，数据增强（DA）对对训练速度和训练效果都提升较大：
+经过实验，数据增强（DA）对训练速度和训练效果都提升较大：
 | $4×4$ | $5×5$ | $6×6$ |
 |:---:|:---:|:---:|
 |<img src="ppo_da/img/compare_size4.png">|<img src="ppo_da/img/compare_size5.png">|<img src="ppo_da/img/compare_size6.png">|
