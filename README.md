@@ -157,20 +157,20 @@ MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，explor
 
 
 #### 重视调参！一锤定音！
-在mode0的PPO实验中，我一直使用<code>batch_size=2048</code>，并且效果不错。于是我在mode1的PPO中沿用了该参数，但尝试了一些别的参数及微调的奖励组合都效果不好：
+在mode0的PPO实验中，我一直使用<code>batch_size=2048</code>。由于效果不错，于是我很自然地在mode1的PPO中沿用了该参数，但尝试了一众其他参数及微调的奖励组合都效果很差：
 
 |图示|说明|
 |:---:|:---:|
 |<img src="img/bad.png">|<code>batch_size=2048</code>|
 
-最后发现在许多失败的实验中，都存在着“跌落”现象，并且伴随<code>aproxi_kl</code>的激增。
-我们知道，散度的激增可能是网络过拟合数据导致的，但如果排除了网络复杂度，还会是什么原因呢？
+然后发现在许多失败的实验中，都存在着“跌落”现象，并且伴随散度的激增，开始频繁“早停”。
+我们知道，散度激增可能是网络过拟合数据导致的，但如果排除了网络复杂度，还会是什么原因呢？
 那很大可能就是数据的原因了，请看下面实验：
 |图示|legend|说明|
 |:---:|:---:|:---:|
 |<img src="mode1_solver/img/rew.png">|<img src="mode1_solver/img/legend.png">|overfit指actor网络复杂度过高|
-|<img src="mode1_solver/img/train_approx_kl.png">|<img src="mode1_solver/img/legend2.png">|太小的<code>batch_size</code>会造成散度的异常|
-|<img src="mode1_solver/img/train_clip_fraction.png">|<img src="mode1_solver/img/legend2.png">|太小的<code>batch_size</code>会造成切除占比的异常|
+|<img src="mode1_solver/img/train_approx_kl.png">|<img src="mode1_solver/img/legend2.png">|太小的<code>batch_size</code>造成了散度的异常|
+|<img src="mode1_solver/img/train_clip_fraction.png">|<img src="mode1_solver/img/legend2.png">|太小的<code>batch_size</code>造成了切除占比的异常|
 
 可以看到，仅仅是把<code>batch_size</code>从2048换成20480，简单粗暴地提升数据丰富度，竟让分数提升如此显著！
 更进一步地，观察到总是会在一定步数后，开始频繁触发“早停”，然后“跌落”，说明这时候<code>target_kl</code>反而限制了网络更新。
