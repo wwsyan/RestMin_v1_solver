@@ -174,7 +174,7 @@ MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，explor
 
 可以看到，仅仅是把<code>batch_size</code>从2048换成20480，简单粗暴地提升数据丰富度，竟让分数提升如此显著！
 更进一步地，观察到总是会在一定步数后，开始频繁触发“早停”，然后“跌落”，说明这时候<code>target_kl</code>反而限制了网络更新。
-那干脆就直接让<code>target_k=None</code>，于是我们终于得到完美的高分且不跌落的曲线（绿线：PPO_target_kl_None）😍。
+那干脆就直接让<code>target_k=None</code>，终于得到完美的高分且不跌落的曲线（绿线：PPO_target_kl_None）！。
 
 
 
