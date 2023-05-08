@@ -115,11 +115,13 @@ MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，explor
 - MCTS让数据变得更高质量的同时，也意味着更新前后策略差异会比较大，这时候“早停”机制反而限制了网络的更新。可以视情况将<code>target_kl</code>调高，或直接设置为<code>None</code>。
 - 在一幕数据的收集中，保留蒙特卡洛树的新枝，只去掉旧枝，可能会提高训练效果（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/mcts.py#L215)）。
     
-
 作为一个计算负担很重的策略优化的插件，我们最好是在合适的时候再去启用，而不是像AlphaZero那样从零开始。比如我们可以先用PPO跑一个底模，在此基础上启用MCTS。
-如下实验展示的就是这样的过程：
+下面的实验中，我们使用PPO预训练模型，跑<code>3e4</code>的步长来精进策略：
+|奖励|散度|
+|:---:|:---:|
+|<img src="ppo_mcts/img/rew.png">|<img src="ppo_mcts/img/approx_kl.png">|
 
-可以看到在MCTS的帮助下，模型得到了极大的精进。
+可以看到在MCTS的帮助下，模型跑分接近满分，并且散度降低说明训练逐渐收敛。
 
 
 ## 模式1
@@ -143,7 +145,7 @@ MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，explor
 如何实现呢？我采用了类似扫雷游戏中展开无雷区的递归算法（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/pg/utils.py#L36)）。
 修改过后的奖励是这样的：[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/pg/env.py#L250)。
 
-<img src="img/cluster.png" width="30%" height="30%">
+<img src="img/cluster.png" width="20%" height="20%">
 
 使用该奖励，我很意外地用比PPO性能更差的带基线的[PG](https://github.com/wwsyan/RestMin_v1_solver/blob/main/pg/pg.py)算法，
 及一组不合理的参数，训练到了一个均分80的模型，并且很稳定，继续训练该模型不会出现“跌落”的现象。
@@ -163,10 +165,16 @@ MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，explor
 
 最后发现在许多失败的实验中，都存在着“跌落”现象，并且伴随<code>aproxi_kl</code>的激增。
 我们知道，散度的激增可能是网络过拟合数据导致的，但如果排除了网络复杂度，还会是什么原因呢？
-那就很大可能是数据的原因了，请看下面实验：
+那很大可能就是数据的原因了，请看下面实验：
+|图示|legend|说明|
+|:---:|:---:|:---:|
+|<img src="mode1_solver/img/rew.png">|<img src="mode1_solver/img/legend.png">|overfit指actor网络复杂度过高|
+|<img src="mode1_solver/img/train_approx_kl.png">|<img src="mode1_solver/img/legend2.png">|太小的<code>batch_size</code>会造成散度的异常|
+|<img src="mode1_solver/img/train_clip_fraction.png">|<img src="mode1_solver/img/legend2.png">|太小的<code>batch_size</code>会造成切除占比的异常|
 
-把<code>batch_size</code>从2048换成20480，简单粗暴地提升数据丰富度，效果提升竟如何显著！
-更进一步地，观察到
+可以看到，仅仅是把<code>batch_size</code>从2048换成20480，简单粗暴地提升数据丰富度，竟让分数提升如此显著！
+更进一步地，观察到总是会在一定步数后，开始频繁触发“早停”，然后“跌落”，说明这时候<code>target_kl</code>反而限制了网络更新。
+那干脆就直接让<code>target_k=None</code>，于是我们终于得到完美的高分且不跌落的曲线（绿线：PPO_target_kl_None）😍。
 
 
 
