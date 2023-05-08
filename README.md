@@ -117,7 +117,7 @@ MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，explor
 作为一个计算负担很重的策略优化的插件，我们最好是在合适的时候再去启用，而不是像AlphaZero那样从零开始。比如我们可以先用PPO跑一个底模，在此基础上启用MCTS。
 如下实验展示的就是这样的过程：
 
-可以看到
+可以看到在MCTS的帮助下，模型得到了极大的精进。
 
 
 ## 模式1
@@ -137,12 +137,14 @@ MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，explor
 做出本尝试的想法是：能不能尽量不使用计算负担重的MCTS，只依靠一个关键性的、直击要害的奖励？
 从个人游玩经验来说，同色棋子应该尽可能地靠近，这样成功的可能性是最大的。
 直观来看，一个状态，如果同色棋子连成的“块”越少，就越好。
-如下图所示，同色棋子连成的“块”数是5。如何实现呢？我采用了类似扫雷游戏中展开无雷区的递归算法
-（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/pg/utils.py#L36)）。
+如下图所示，同色棋子连成的“块”数是5。
+如何实现呢？我采用了类似扫雷游戏中展开无雷区的递归算法（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/pg/utils.py#L36)）。
+修改过后的奖励是这样的：[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/pg/env.py#L250)。
 
 <img src="img/cluster.png" width="30%" height="30%">
 
-使用该奖励，我很意外地用比PPO性能更差的带基线的PG算法，及一组不合理的参数，训练到了一个均分80的模型，并且很稳定，继续训练该模型不会出现“跌落”的现象。
+使用该奖励，我很意外地用比PPO性能更差的带基线的[PG](https://github.com/wwsyan/RestMin_v1_solver/blob/main/pg/pg.py)算法，
+及一组不合理的参数，训练到了一个均分80的模型，并且很稳定，继续训练该模型不会出现“跌落”的现象。
 比较遗憾的是日志没留意被训练平台清除了，只保留了模型的参数，而不知道是如何训练出来的。我尝试着复现，但都失败了：
 
 |图示|说明|
@@ -158,7 +160,7 @@ MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，explor
 |<img src="img/bad.png">|<code>batch_size=2048</code>|
 
 最后发现在许多失败的实验中，都存在着“跌落”现象，并且伴随<code>target_kl</code>的激增。
-我们知道，散度的激增是网络过拟合数据导致的，但如果排除了网络学习能力的因素，还会是什么原因呢？
+我们知道，散度的激增可能是网络过拟合数据导致的，但如果排除了网络学习能力的因素，还会是什么原因呢？
 会不会是数据太单一了呢？请看下面实验：
 
 
