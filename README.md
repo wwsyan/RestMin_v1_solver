@@ -145,7 +145,7 @@ MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，explor
 如何实现呢？我采用了类似扫雷游戏中展开无雷区的递归算法（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/pg/utils.py#L36)）。
 修改过后的奖励是这样的：[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/pg/env.py#L250)。
 
-<img src="img/cluster.png" width="20%" height="20%">
+<img src="img/cluster.png" width="30%" height="30%">
 
 使用该奖励，我很意外地用比PPO性能更差的带基线的[PG](https://github.com/wwsyan/RestMin_v1_solver/blob/main/pg/pg.py)算法，
 及一组不合理的参数，训练到了一个均分80的模型，并且很稳定，继续训练该模型不会出现“跌落”的现象。
