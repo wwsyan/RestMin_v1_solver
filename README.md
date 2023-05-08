@@ -1,7 +1,7 @@
 # RestMin_v1_solver
 本工程使用 强化学习框架 [Stable-Baselines3](https://stable-baselines3.readthedocs.io/en/master/guide/install.html)。
 
-试玩地址：[链接]()（修复中：1️⃣引入tensorflowJS库报错 2️⃣本地预览正常，但项目构建报错）
+试玩地址：[链接]()（修复中：1️⃣引入tensorflowJS库报错 2️⃣Cocos Creator本地运行正常，但项目构建报错）。
 
 ## 环境介绍
 该环境是一种中国古代棋的简化/魔改版本，分为两种模式，模式0是简化，模式1是魔改。
