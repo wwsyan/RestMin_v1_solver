@@ -15,7 +15,7 @@
 | :---: | :---: |
 | <img src="img/gameplay_mode0.gif" width="75%" height="75%"> | <img src="img/gameplay_mode1.gif" width="75%" height="75%"> |
 
-### 最终效果展示
+### 🌈最终效果展示
 | 模式 1 随机 | 模式 1 well-trained|
 | :---: | :---: |
 | <img src="img/mode1_random.gif" width="75%" height="75%"> | <img src="img/mode1.gif" width="75%" height="75%"> |
