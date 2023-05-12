@@ -15,6 +15,11 @@
 | :---: | :---: |
 | <img src="img/gameplay_mode0.gif" width="75%" height="75%"> | <img src="img/gameplay_mode1.gif" width="75%" height="75%"> |
 
+### 最终效果展示
+| 模式 1 随机 | 模式 1 well-trained|
+| :---: | :---: |
+| <img src="img/mode1_random.gif" width="75%" height="75%"> | <img src="img/mode1.gif" width="75%" height="75%"> |
+
 ### 终局条件
 该棋的游玩环境和训练环境有着不同的终局条件。在[游玩环境](https://github.com/wwsyan/RestMin_v1_solver/blob/main/env/gameRaw.js#L296)中，
 终局判断函数会按顺序进行以下的判定：
