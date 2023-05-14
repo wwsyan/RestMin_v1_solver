@@ -58,12 +58,12 @@
 ### 观测空间与动作空间
 对于 $6×6$ 的棋盘， 模式 0 和 模式 1 的 $observation$ 分别是 <code>MultiBinary(36)</code> 和 <code>MultiBinary(72)</code>；
 $action$ 是 <code>Discrete(36*4)</code>，意为选中一个位置的棋子，并进行上下左右四个方向的移动，由于有大量不合法动作，所以训练时要使用动作掩码
-（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/env/env_pure.py#L153)）。
+（[Detail](https://github.com/wwsyan/RestMin_v1_solver/blob/main/env/env_pure.py#L153)）。
 
 ## 模式0
 ### 标准PPO
 使用标准PPO作为基线，分别测试在 $4×4$， $5×5$ 和 $6×6$ 棋盘下的性能
-（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_baseline/run.py)）。
+（[Detail](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_baseline/run.py)）。
 | 幕长 | 幕奖励 | 说明 |
 |:---:|:---:|:---:|
 |<img src="ppo_baseline/img/baseline_ep_len.png" width="100%" height="100%">|<img src="ppo_baseline/img/baseline_reward.png" width="100%" height="100%">| 橙： $4×4$ <br>蓝： $5×5$ <br>红： $6×6$ |
@@ -74,7 +74,7 @@ $action$ 是 <code>Discrete(36*4)</code>，意为选中一个位置的棋子，�
 首先值得考虑的trick是数据的等效性，让所有等价的幕轨迹一同参与模型的训练，应当是十分有效的。
 等价的状态由旋转和镜像组合，一共8种。
 我们需要在收集到一个batch数据后，对这组数据进行加工，再把加工好的数据传输给训练模块。
-具体来说（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_da/callback_da.py#L7)），
+具体来说（[Detail](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_da/callback_da.py#L7)），
 我们要使用<code>Stable-Baselines3</code>中的自定义<code>Callback</code>函数来参与训练流程，操作<code>rollout_buffer</code>中的下列数据：
 <ul>
   <li>扩展 <code>observations</code>, <code>actions</code> 和 <code>action_masks</code>.</li>
@@ -83,7 +83,7 @@ $action$ 是 <code>Discrete(36*4)</code>，意为选中一个位置的棋子，�
   <li>重新计算 <code>returns</code> and <code>advantages</code>.</li>
 </ul>
 
-或者可以看看另一个 $action$ 更简单的走迷宫的例子：[Code](https://github.com/wwsyan/SB3_practice#maze-by-maskable-ppo-with-data-augment)。
+或者可以看看另一个 $action$ 更简单的走迷宫的例子：[Detail](https://github.com/wwsyan/SB3_practice#maze-by-maskable-ppo-with-data-augment)。
 
 经过实验，数据增强（DA）对训练速度和训练效果都提升较大：
 | $4×4$ | $5×5$ | $6×6$ |
@@ -108,17 +108,17 @@ MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，explor
 具体来说，我们要：
 
 - 改写标准Gym环境，需要一个能够输入状态和动作，输出后继状态的接口函数（
-    [Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/env.py#L326)）；</li>
+    [Detail](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/env.py#L326)）；</li>
 - 编/改写MCTS算法，调用上述的接口函数，和PPO的ActorCritic网络实现蒙特卡洛树的expand（
-    [Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/mcts.py#L116)）；</li>
+    [Detail](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/mcts.py#L116)）；</li>
 - 改写<code>Stable-Baselines3</code>的PPO算法文件，在<code>collect_rollouts</code>函数中调用MCTS（
-    [Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/ppo_mcts.py#L334)）。</li>
+    [Detail](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/ppo_mcts.py#L334)）。</li>
 
 另外，注意：
 - MCTS的引入使得数据的收集变得非常慢，所以每一个batch的数据都十分宝贵，算法要有一定的断点传续功能。
     注意<code>Stable-Baselines3</code>中的PPO不具备该功能，需要改写；
 - MCTS让数据变得更高质量的同时，也意味着更新前后策略差异会比较大，这时候“早停”机制反而限制了网络的更新。可以视情况将<code>target_kl</code>调高，或直接设置为<code>None</code>。
-- 在一幕数据的收集中，保留蒙特卡洛树的新枝，只去掉旧枝，可能会提高训练效果（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/mcts.py#L215)）。
+- 在一幕数据的收集中，保留蒙特卡洛树的新枝，只去掉旧枝，可能会提高训练效果（[Detail](https://github.com/wwsyan/RestMin_v1_solver/blob/main/ppo_mcts/mcts.py#L215)）。
     
 作为一个计算负担很重的策略优化的插件，我们最好是在合适的时候再去启用，而不是像AlphaZero那样从零开始。比如我们可以先用PPO跑一个底模，在此基础上启用MCTS。
 下面的实验中，我们使用PPO预训练模型，跑<code>3e4</code>的步长来精进策略：
@@ -131,7 +131,7 @@ MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，explor
 
 ## 模式1
 由于模式1引入了双色棋子，因此多了异色棋子对换的等效性，与旋转、镜像组合起来一共是16种
-（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/pg/callback_da.py#L127)）。
+（[Detail](https://github.com/wwsyan/RestMin_v1_solver/blob/main/pg/callback_da.py#L127)）。
 
 #### 随机网络蒸馏
 即RND，是一种以内在奖励为驱动，鼓励探索的算法。可以作为插件，作用于PPO算法中计算奖励的模块。
@@ -147,8 +147,8 @@ MCTS，即蒙特卡洛树搜索，是一种结合了learning和planning，explor
 从个人游玩经验来说，同色棋子应该尽可能地靠近，这样成功的可能性是最大的。
 直观来看，一个状态，如果同色棋子连成的“块”越少，就越好。
 如下图所示，同色棋子连成的“块”数是5。
-如何实现呢？我采用了类似扫雷游戏中展开无雷区的递归算法（[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/pg/utils.py#L36)）。
-修改过后的奖励是这样的：[Code](https://github.com/wwsyan/RestMin_v1_solver/blob/main/pg/env.py#L250)。
+如何实现呢？我采用了类似扫雷游戏中展开无雷区的递归算法（[Detail](https://github.com/wwsyan/RestMin_v1_solver/blob/main/pg/utils.py#L36)）。
+修改过后的奖励是这样的：[Detail](https://github.com/wwsyan/RestMin_v1_solver/blob/main/pg/env.py#L250)。
 
 <img src="img/cluster.png" width="30%" height="30%">
 
